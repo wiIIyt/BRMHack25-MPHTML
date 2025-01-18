@@ -4,20 +4,25 @@ from views import views
 app = Flask(__name__)
 app.register_blueprint(views, url_prefix="/veiws")
 
-@app.route('/process', methods=['POST'])  # This listens for POST requests at the "/process" URL
 def process():
-    # Get the JSON data sent by the frontend
-    data = request.json
-    
-    # Extract the "text" field from the JSON data
-    input_text = data.get('text', '')  # If "text" is missing, use an empty string as a default
+    try:
+        # Safely parse JSON from the request
+        data = request.get_json()
+        if not data or 'text' not in data:
+            return jsonify({"error": "Invalid or missing JSON payload"}), 400
 
-    # Process the text (reverse it, just as an example)
-    reversed_text = input_text[::-1]  # This slices the string backward to reverse it
+        # Extract the text and process it
+        input_text = data['text']
+        print(f"Received text: {input_text}")
 
-    # Send a response back to the frontend as JSON
-    return jsonify({"original": input_text, "reversed": reversed_text})
+        reversed_text = input_text[::-1]
 
+        return jsonify({"original": input_text, "reversed": reversed_text})
+    except Exception as e:
+        # Handle unexpected errors
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True,port=8000)
+    app.run(debug=True, port=8000)
+
+print(app.url_map)  # Prints all the routes registered with Flask
