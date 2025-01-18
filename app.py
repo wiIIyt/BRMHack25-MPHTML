@@ -2,7 +2,9 @@ from flask import Flask, request, jsonify
 from views import views
 import os
 import easyocr as es
-import pandas as pd
+from fatsecret import Fatsecret
+
+fs = Fatsecret('9ad9d6c509b541e397e45f3eaeee2259', '594ec0639817489abd7a391f229f3b60')
 
 # Function to perform OCR using EasyOCR
 def EasyOCR(path: str) -> list:
@@ -35,10 +37,20 @@ def process():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+def foodSearch(food):
+    try:
+        foods = fs.foods_search(food)
+        return foods['food_name']
+    except Exception as e:
+        # If an error occurs, skip the search and print the error message
+        print(f"Error occurred while searching food: {e}")
+
 # Route for uploading files
 @app.route('/upload', methods=['PUT'])
+
 def upload_file():
     try:
+        foodItems = []
         if 'file' not in request.files:
             return jsonify({"error": "No file part in the request"}), 400
 
@@ -64,14 +76,15 @@ def upload_file():
 
         # Extract only the text part of the OCR result
         text_result = [detection[1] for detection in ocr_result]
-
+        foodItems.append(foodSearch(text_result))
+        food = [f for f in foodItems]
          # Extract only the text part of the OCR result
         text_result = [detection[1] for detection in ocr_result]  # Detection[1] is the text part
-
-        return jsonify({"message": "File uploaded and processed successfully!", "ocr_result": text_result})
+        return jsonify({"message": "File uploaded and processed successfully!", "ocr_result": food})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     print(app.url_map)  # Prints all the routes registered with Flask
+    print(foodSearch("appl"))
     app.run(debug=True, port=8000)
