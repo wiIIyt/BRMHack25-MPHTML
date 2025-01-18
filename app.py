@@ -1,9 +1,24 @@
 from flask import Flask, request, jsonify
 from views import views
+import os
+import easyocr as es
+import pandas as pd
+
+# Function to perform OCR using EasyOCR
+def EasyOCR(path: str) -> list:
+    reader = es.Reader(['en'])
+    text = reader.readtext(path)
+    return text
+
+# Set up the upload folder
+UPLOAD_FOLDER = 'uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 app = Flask(__name__)
-app.register_blueprint(views, url_prefix="/veiws")
+app.register_blueprint(views, url_prefix="/views")
 
+# Route for processing JSON data
+@app.route('/process', methods=['POST'])
 def process():
     try:
         # Safely parse JSON from the request
@@ -11,18 +26,44 @@ def process():
         if not data or 'text' not in data:
             return jsonify({"error": "Invalid or missing JSON payload"}), 400
 
-        # Extract the text and process it
         input_text = data['text']
         print(f"Received text: {input_text}")
 
+        # Reverse the input text as an example
         reversed_text = input_text[::-1]
-
         return jsonify({"original": input_text, "reversed": reversed_text})
     except Exception as e:
-        # Handle unexpected errors
+        return jsonify({"error": str(e)}), 500
+
+# Route for uploading files
+@app.route('/upload', methods=['PUT'])
+def upload_file():
+    try:
+        if 'file' not in request.files:
+            return jsonify({"error": "No file part in the request"}), 400
+
+        file = request.files['file']
+
+        if file.filename == '':
+            return jsonify({"error": "No selected file"}), 400
+
+        # Save the file to the upload folder
+        file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+        file.save(file_path)
+
+        # Perform OCR on the uploaded file
+        ocr_result = EasyOCR(file_path)
+
+        # Format the OCR result as a DataFrame
+        result_df = pd.DataFrame(ocr_result, columns=["bbox", "text", "confidence"])
+
+        # Convert the DataFrame to JSON and send it as a response
+        result_json = result_df.to_json(orient='records')
+
+        return jsonify({"message": "File uploaded and processed successfully!", "ocr_result": result_json})
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
+    print(app.url_map)  # Prints all the routes registered with Flask
     app.run(debug=True, port=8000)
-
-print(app.url_map)  # Prints all the routes registered with Flask

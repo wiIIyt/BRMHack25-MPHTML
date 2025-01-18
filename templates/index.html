@@ -17,11 +17,13 @@
 
     <!-- Placeholder to show the response from the backend -->
     <p id="response"></p>
+    <input type="file" id="fileInput" />
+    <input type ="button" onclick="uploadFile()">Upload</input>
 
     <script>
         // Function to send the input text to the backend
         function sendData() {
-            // Get the text that the user typed in the input field
+            // Get t>he text that the user typed in the input field
             const inputText = document.getElementById('inputText').value;
 
             // Use the "fetch" function to send a POST request to the backend
@@ -36,6 +38,30 @@
                 document.getElementById('response').innerText = 
                     `Original: ${data.original}, Reversed: ${data.reversed}`;
             });
+        }
+    </script>
+
+    <script>
+        function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0]; // Get the selected file
+
+            if (!file) {
+                alert('Please select a file first!');
+                return;
+            }
+            console.log("processeing...");
+
+            const formData = new FormData();
+            formData.append('file', file); // Attach the file to the FormData
+
+            fetch('/upload', {
+                method: 'PUT',
+                body: formData, // Send the FormData object
+            })
+            .then(response => response.json())
+            .then(data => console.log('Response from server:', data))
+            .catch(error => console.error('Error:', error));
         }
     </script>
 </body>
