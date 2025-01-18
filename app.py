@@ -51,16 +51,24 @@ def upload_file():
         file_path = os.path.join(UPLOAD_FOLDER, file.filename)
         file.save(file_path)
 
-        # Perform OCR on the uploaded file
-        ocr_result = EasyOCR(file_path)
+        attempts = 0
+        confidence_threshold = 0.90  # 90% confidence
+        ocr_result = []
 
-        # Format the OCR result as a DataFrame
-        result_df = pd.DataFrame(ocr_result, columns=["bbox", "text", "confidence"])
+        while attempts < 5:
+            ocr_result = EasyOCR(file_path)
+            # Check if confidence is high enough (above 90%)
+            if all(detection[2] >= confidence_threshold for detection in ocr_result):
+                break  # Stop repeating OCR if confidence is high enough
+            attempts += 1
 
-        # Convert the DataFrame to JSON and send it as a response
-        result_json = result_df.to_json(orient='records')
+        # Extract only the text part of the OCR result
+        text_result = [detection[1] for detection in ocr_result]
 
-        return jsonify({"message": "File uploaded and processed successfully!", "ocr_result": result_json})
+         # Extract only the text part of the OCR result
+        text_result = [detection[1] for detection in ocr_result]  # Detection[1] is the text part
+
+        return jsonify({"message": "File uploaded and processed successfully!", "ocr_result": text_result})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
