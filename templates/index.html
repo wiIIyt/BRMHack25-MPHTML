@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styls.css')}}" />
+    <link
+      href="https://fonts.googleapis.com/css?family=Karla:400,700|Martel:400,700"
+      rel="stylesheet"
+    />
+    <title>Dougsworth</title>
+    <style>body,
+      li,
+      a,
+      p {
+        font-family: "Martel", serif;
+        font-weight: 400;
+      }
+      
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        font-family: "Karla", sans-serif;
+        font-weight: 700;
+      }
+      
+      .button {
+        font-family: "Karla", sans-serif;
+        font-weight: 700;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+      }
+      
+      * {
+        margin: 0;
+        padding: 0;
+        --eggshell: #f3ead8ff;
+        --seal-brown: #4b2b18ff;
+        --khaki: #bea28bff;
+        --dun: #cdb8a7ff;
+        --black-bean: #2f1006ff;
+      }
+      
+      ul li {
+        list-style: none;
+        display: inline;
+        margin: 0px 20px 0px 0px;
+      }
+      
+      h3 {
+        margin: 10px 10px;
+      }
+      
+      .flex {
+        display: flex;
+        justify-content: space-between;
+        width: 70%;
+        margin: 0 auto;
+        background-color: var(--eggshell);
+        align-items: center;
+        top: 10px;
+        left: 15%;
+        position: fixed;
+        z-index: 2000;
+        border-bottom: white 2px solid;
+      }
+      
+      header {
+        background-image: url(./resources/doug2.png);
+        background-size: cover;
+        background-position: left center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
+      }
+      
+      main {
+        height: 160vh;
+        background-color: #e9d4ad;
+      }
+      
+      main div {
+        height: 150vh;
+        width: 90vw;
+        margin: auto;
+        background-color: #ebe6d3;
+        transform: translate(0, 5vh);
+      }
+      
+      main div section.about {
+        transform: translate(5vh, 3vh);
+      }
+      
+      main div section.about h1 {
+        font-size: 10vh;
+        text-align: center;
+        transform: translate(-5vh, 0vh);
+      }
+      
+      main div section.itemGrid {
+        display: grid;
+        grid-area: "i1" "i2" "i3";
+        grid-template-rows: 1fr;
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+      
+      .i1 {
+        grid-area: i1;
+      }
+      
+      .i2 {
+        grid-area: i2;
+      }
+      
+      .i3 {
+        grid-area: i3;
+      }</style>
+  </head>
+
+  <body>
+    <header>
+      <div class="flex">
+        <h3>Dougsworth</h3>
+        <ul>
+          <li><a title="Resume" href="#">About</a></li>
+          <li><a title="Resume" href="resume.html">Projects</a></li>
+          <li><a title="Resume" href="resume.html">Resume</a></li>
+          <li><a title="Resume" href="resume.html">Contact</a></li>
+        </ul>
+      </div>
+    </header>
+
+    <main>
+      <div>
+        <section class="about">
+          <h1>“xxxxxxxxxxxxxxxxxxxxxx”</h1>
+        </section>
+        <section class="itemGrid">
+          <img src="./resources/doug1.png" class="i1"><img src="./resources/doug3.png" class="i2"><img src="./resources/doug4.png" class="i3">
+        </section>
+      </div>
+    </main>
+
+    <footer></footer>
+  </body>
+</html>
