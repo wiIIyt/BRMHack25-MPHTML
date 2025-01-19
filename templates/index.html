@@ -1,68 +1,119 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flask Communication</title>
+    <title>Receipt Scanner</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100..900&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Page title -->
-    <h1>Flask Two-Way Communication</h1>
+    <div class="everything">
+        <!-- TOP -->
+        <div class="top-bar">
+            <h1>Product Scanner</h1>
+            <div class="buttons">
+                <!-- Buttons under the header -->
+                <button class="about-btn" onclick="toggleVisibility('aboutDiv')">About</button>
+                <button class="instructions-btn" onclick="toggleVisibility('instrct')">Instructions</button>
+            </div>
+        </div>
 
-    <!-- Input field for the user to type text -->
-    <input type="text" id="inputText" placeholder="Enter text">
+        <!-- MIDDLE -->
+        <div class="middle-bar">
+            <div id="aboutDiv" class="about-text" style="display: none;">
+                <h1 id="aboutH1" class="actual-h1">About:</h1>
+                <p id="about" class="actual-p">
+                    This website scans your receipt and, after some time, 
+                    it should tell you the expiration date and recipes with your purchased products.  
+                    This helps you stay organized by ensuring you never miss an expiration
+                    date for food, supplements, or household items. Our tool saves you time,
+                    reduces waste, and keeps you informed about when to use or replace your products.
+                    This was done using HTML, CSS, Javascript, and various back-end languages/APIs.
+                </p>
+            </div>
+            <div id="instrct" class="instruct-text" style="display: none;">
+                <h1 id="instrctH1" class="actual-h1">Instructions:</h1>
+                <p class="actual-p">
+                    To scan the receipt, upload a jpeg/picture of your receipt from your folder,
+                    then press submit. We prefer if you use white text on a black background<strong>&darr;</strong>
+                </p>
+            </div>
+        </div>
 
-    <!-- Button to send the input to the Flask backend -->
-    <button onclick="sendData()">Send</button>
+        <!-- BOTTOM -->
+        <div class="bottom-bar">
+            <p>Submit your receipt image here:</p>
+            <input id="fileInput" class="scan" type="file">
+            <button type="button" onclick="uploadFile()" class="scan">Submit</button>
 
-    <!-- Placeholder to show the response from the backend -->
-    <p id="response"></p>
-    <input type="file" id="fileInput" />
-    <input type ="button" onclick="uploadFile()">Upload</input>
+            <!-- Dynamic results section -->
+            <div id="results">
+                <h3>Suggested Recipes:</h3>
+                <ul id="recipeList" class="results-list"></ul>
+            </div>
+        </div>
+    </div>
+    <footer>Made By: <strong>Cullen, Nihal, and William (1-18-2025)</strong></footer>
 
     <script>
-        // Function to send the input text to the backend
-        function sendData() {
-            // Get t>he text that the user typed in the input field
-            const inputText = document.getElementById('inputText').value;
-
-            // Use the "fetch" function to send a POST request to the backend
-            fetch('/process', {  // The URL "/process" matches the route in the Flask backend
-                method: 'POST',  // We are using POST because we're sending data
-                headers: { 'Content-Type': 'application/json' },  // Tell Flask we're sending JSON
-                body: JSON.stringify({ text: inputText })  // Send the user's text as JSON
-            })
-            .then(response => response.json())  // Convert the server's response to a JavaScript object
-            .then(data => {
-                // Update the page to show the response from Flask
-                document.getElementById('response').innerText = 
-                    `Original: ${data.original}, Reversed: ${data.reversed}`;
-            });
+        // Function to toggle visibility of sections (About or Instructions)
+        function toggleVisibility(section) {
+            const element = document.getElementById(section);
+            if (element) {
+                // Toggle the display of the specified section
+                if (element.style.display === "none" || element.style.display === "") {
+                    element.style.display = "block";
+                } else {
+                    element.style.display = "none";
+                }
+            } else {
+                console.error(`Element with ID "${section}" not found.`);
+            }
         }
-    </script>
 
-    <script>
+        // Function to handle file upload and send it to the server
         function uploadFile() {
             const fileInput = document.getElementById('fileInput');
-            const file = fileInput.files[0]; // Get the selected file
+            const file = fileInput.files[0];
 
             if (!file) {
                 alert('Please select a file first!');
                 return;
             }
-            console.log("processeing...");
 
             const formData = new FormData();
-            formData.append('file', file); // Attach the file to the FormData
+            formData.append('file', file);
 
+            // Sending the file to the Flask server using a PUT request
             fetch('/upload', {
                 method: 'PUT',
-                body: formData, // Send the FormData object
+                body: formData,
             })
             .then(response => response.json())
-            .then(data => console.log('Response from server:', data))
-            .catch(error => console.error('Error:', error));
+            .then(data => {
+                console.log("Server Response:", data);  // Debugging line
+                if (data.error) {
+                    alert(`Error: ${data.error}`);
+                } else {
+                    // Update recipes section
+                    const recipeList = document.getElementById('recipeList');
+                    recipeList.innerHTML = "";
+                    if (data.recipes) {
+                        data.recipes.forEach(recipe => {
+                            const li = document.createElement('li');
+                            li.textContent = recipe.title;
+                            recipeList.appendChild(li);
+                        });
+                    } else {
+                        recipeList.innerHTML = "<li>No recipes found.</li>";
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while processing the file.');
+            });
         }
     </script>
 </body>

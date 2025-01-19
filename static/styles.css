@@ -1,110 +1,136 @@
-body,
-li,
-a,
-p {
-  font-family: "Martel", serif;
-  font-weight: 400;
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: "Karla", sans-serif;
-  font-weight: 700;
-}
-
-.button {
-  font-family: "Karla", sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 3px;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  --eggshell: #f3ead8ff;
-  --seal-brown: #4b2b18ff;
-  --khaki: #bea28bff;
-  --dun: #cdb8a7ff;
-  --black-bean: #2f1006ff;
-}
-
-ul li {
-  list-style: none;
-  display: inline;
-  margin: 0px 20px 0px 0px;
-}
-
-h3 {
-  margin: 10px 10px;
-}
-
-.flex {
-  display: flex;
-  justify-content: space-between;
-  width: 70%;
-  margin: 0 auto;
-  background-color: var(--eggshell);
-  align-items: center;
-  top: 10px;
-  left: 15%;
-  position: fixed;
-  z-index: 2000;
-  border-bottom: white 2px solid;
-}
-
-header {
-  background-image: url(./resources/doug2.png);
-  background-size: cover;
-  background-position: left center;
-  min-height: 100vh;
-  margin: 0;
-  padding: 0;
-}
-
-main {
-  height: 160vh;
-  background-color: #e9d4ad;
-}
-
-main div {
-  height: 150vh;
-  width: 90vw;
-  margin: auto;
-  background-color: #ebe6d3;
-  transform: translate(0, 5vh);
-}
-
-main div section.about {
-  transform: translate(5vh, 3vh);
-}
-
-main div section.about h1 {
-  font-size: 10vh;
-  text-align: center;
-  transform: translate(-5vh, 0vh);
-}
-
-main div section.itemGrid {
+/* Overall Layout */
+.everything {
   display: grid;
-  grid-area: "i1" "i2" "i3";
-  grid-template-rows: 1fr;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 2fr 1fr;
+  row-gap: 50px;
+  text-align: center;
+  font-family: "Roboto";
 }
 
-.i1 {
-  grid-area: i1;
+body {
+  background-color: rgb(40, 40, 40);
+  color: green;
+  margin: 0;
+  padding: 0;
+  z-index: 0;
 }
 
-.i2 {
-  grid-area: i2;
+/* TOP PART */
+h1 {
+  margin: 0;
+  padding: 0;
 }
 
-.i3 {
-  grid-area: i3;
+.top-bar {
+  background-color: rgb(60, 60, 60);
+  padding: none;
+  margin-bottom: 50px;
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  row-gap: 0px;
+  width: 100%;
+  height: 150px;
+  box-shadow: 0px 10px rgba(0, 0, 0, 0.1);
+  font-family: "Roboto";
+  text-align: center;
+  font-size: 25px;
 }
+
+.about-btn, .instructions-btn {
+  background-color: rgb(60, 60, 60);
+  border-color: white;
+  border-style: solid;
+  box-shadow: 0px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 100px;
+  width: 150px;
+  height: 50px;
+  color: rgb(10, 150, 10);
+  font-size: 15px;
+  transition: background-color 0.125s, width 0.25s, height 0.25s, font-size 0.25s;
+}
+
+.about-btn:hover, .instructions-btn:hover {
+  background-color: rgb(65, 65, 65);
+  width: 170px;
+  height: 75px;
+  font-size: 20px;
+}
+
+.about-btn:active, .instructions-btn:active {
+  background-color: rgb(80, 80, 80);
+}
+
+/* MIDDLE PART */
+.middle-bar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;  /* Added some gap for better separation */
+}
+
+.about-text, .instruct-text {
+  background-color: darkgreen;
+  transition: background-color 0.25s;
+  box-shadow: 0px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+}
+
+.about-text:hover, .instruct-text:hover {
+  background-color: rgb(0, 80, 0);
+}
+
+/* Reset font-size for visibility */
+.actual-p {
+  font-size: 18px;  /* Make text visible */
+  color: white;
+}
+
+.actual-h1 {
+  font-size: 24px;  /* Make headers visible */
+  color: white;
+}
+
+.classname {
+  color: black;
+  font-size: 15px;
+}
+
+.classname2 {
+  font-size: 30px;
+  color: black;
+}
+
+/* BOTTOM PART */
+.bottom-bar {
+  background-color: rgb(34, 34, 34);
+  align-items: center;
+}
+
+.scan {
+  margin-left: auto;
+  margin-right: auto;
+  background-color: gray;
+}
+
+.results {
+  font-size: 30px;
+}
+
+#results {
+  margin-top: 20px;
+}
+
+.results-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.results-list li {
+  margin: 5px 0;
+  color: white;
+}
+
+/* Section visibility for About and Instructions */
+#aboutDiv, #instrct {
+  display: none;
+}
+
