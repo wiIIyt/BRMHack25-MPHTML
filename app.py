@@ -78,15 +78,29 @@ def TesseractOCR(image_path):
 
 def combined_ocr(path):
     print("Step 4: Combining OCR results")
+    # Perform OCR with EasyOCR and TesseractOCR
     easy_results = EasyOCR(path)
     tesseract_results = TesseractOCR(path)
     
+    # Initialize the spell checker
+    spell = SpellChecker()
+    
+    # Spell check EasyOCR results
+    easy_corrected = [spell.correction(i[1]) for i in easy_results]
+    
+    # Spell check TesseractOCR results
+    tesseract_corrected = [spell.correction(text) for text in tesseract_results]
+    
     # Combine and deduplicate results
-    combined_results = set(detection[1] for detection in easy_results) | set(tesseract_results)
+    combined_results = set(easy_corrected) | set(tesseract_corrected)
     combined_results_list = list(combined_results)
+    
+    # Output the combined results
     print(f"Combined OCR Results (size: {len(combined_results_list)}): {combined_results_list[:10]}...")
     print("Step 4 Completed: OCR results combined")
+    
     return combined_results_list
+
 
 def postprocess_text(detected_text):
     print("Step 5: Post-processing text")
