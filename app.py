@@ -11,8 +11,8 @@ import pytesseract
 from spellchecker import SpellChecker
 import re
 
-# Load SpaCy model for similarity comparison
-nlp = spacy.load("en_core_web_md")
+# Lazy-load SpaCy model for similarity comparison
+nlp = spacy.load("en_core_web_sm")
 
 # Initialize Fatsecret API
 fs = Fatsecret('9ad9d6c509b541e397e45f3eaeee2259', 'e432c812a68347ffa7f967da78d60a19')
@@ -110,6 +110,9 @@ def postprocess_text(detected_text):
     return cleaned_text
 
 def search_recipes_by_ingredients(ingredients):
+    global nlp
+    if nlp is None:
+        nlp = spacy.load("en_core_web_md")
     try:
         params = {
             "ingredients": ",".join(ingredients),

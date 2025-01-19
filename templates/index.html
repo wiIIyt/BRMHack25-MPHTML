@@ -14,16 +14,16 @@
             <h1>Product Scanner</h1>
             <div class="buttons">
                 <!-- Buttons under the header -->
-                <button class="about-btn" onclick="toggleVisibility('aboutDiv')">About</button>
+                <button class="about-btn" onclick="toggleVisibility('about')">About</button>
                 <button class="instructions-btn" onclick="toggleVisibility('instrct')">Instructions</button>
             </div>
         </div>
 
         <!-- MIDDLE -->
         <div class="middle-bar">
-            <div id="aboutDiv" class="about-text" style="display: none;">
+            <div id="aboutDiv" class="about-text" style="display: block;">
                 <h1 id="aboutH1" class="actual-h1">About:</h1>
-                <p id="about" class="actual-p">
+                <p id="about" class="actual-p" style="display: block;">
                     This website scans your receipt and, after some time, 
                     it should tell you the expiration date and recipes with your purchased products.  
                     This helps you stay organized by ensuring you never miss an expiration
@@ -32,9 +32,9 @@
                     This was done using HTML, CSS, Javascript, and various back-end languages/APIs.
                 </p>
             </div>
-            <div id="instrct" class="instruct-text" style="display: none;">
+            <div id="instrctDiv" class="instruct-text" style="display: block;">
                 <h1 id="instrctH1" class="actual-h1">Instructions:</h1>
-                <p class="actual-p">
+                <p id = "instrct" class="actual-p" style="display: block;">
                     To scan the receipt, upload a jpeg/picture of your receipt from your folder,
                     then press submit. We prefer if you use white text on a black background<strong>&darr;</strong>
                 </p>
@@ -46,10 +46,10 @@
             <p>Submit your receipt image here:</p>
             <input id="fileInput" class="scan" type="file">
             <button type="button" onclick="uploadFile()" class="scan">Submit</button>
-
             <!-- Dynamic results section -->
             <div id="results">
                 <h3>Suggested Recipes:</h3>
+                <div id="loading"></div>
                 <ul id="recipeList" class="results-list"></ul>
             </div>
         </div>
@@ -74,6 +74,11 @@
 
         // Function to handle file upload and send it to the server
         function uploadFile() {
+            const loadingDiv = document.getElementById('loading');
+            const loadingImg = document.createElement('IMG');
+            loadingImg.style.width = "20px"; loadingImg.style.marginTop = "5px";
+            loadingDiv.appendChild(loadingImg);
+            loadingImg.src = "{{ url_for('static', filename='loading.gif') }}";
             const fileInput = document.getElementById('fileInput');
             const file = fileInput.files[0];
 
@@ -105,6 +110,7 @@
                             li.textContent = recipe.title;
                             recipeList.appendChild(li);
                         });
+                        document.getElementById('loading').removeChild(loadingImg);
                     } else {
                         recipeList.innerHTML = "<li>No recipes found.</li>";
                     }
