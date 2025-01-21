@@ -12,7 +12,7 @@ from spellchecker import SpellChecker
 import re
 
 # Lazy-load SpaCy model for similarity comparison
-nlp = spacy.load("en_core_web_sm")
+nlp = spacy.load("en_core_web_md")
 
 # Initialize Fatsecret API
 fs = Fatsecret('9ad9d6c509b541e397e45f3eaeee2259', 'e432c812a68347ffa7f967da78d60a19')
@@ -28,91 +28,50 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app = Flask(__name__)
 app.register_blueprint(views, url_prefix="/views")
 
-# Function to adjust image by inverting colors using OpenCV
-def invert_image(image_path, output_path):
-    # Read the image using OpenCV
-    image = cv2.imread(image_path)
+def ocr_space_api(file_path):
+    """
+    Use OCR.space API to extract text from an image.
+    """
+    try:
+        with open(file_path, 'rb') as file:
+            payload = {
+                'apikey': 'K88117951388957',
+                'isOverlayRequired': False,
+                'language': 'eng',
+                'OCREngine': 2,
+            }
+            response = requests.post('https://api.ocr.space/parse/image', files={'file': file}, data=payload)
+            response.raise_for_status()
+            result = response.json()
 
-    # Invert the colors (white text on black background becomes black text on white background)
-    inverted_image = cv2.bitwise_not(image)
+            if result.get("OCRExitCode") == 1:
+                parsed_text = result["ParsedResults"][0]["ParsedText"]
+                print(parsed_text)
+                return parsed_text.split('\n')
+            else:
+                print(f"OCR API Error: {result.get('ErrorMessage')}")
+                return []
 
-    # Save the processed image
-    cv2.imwrite(output_path, inverted_image)
-    print(f"Processed image saved as {output_path}")
-
-def preprocess_image(image_path):
-    print("Step 1: Processing image")
-    if not os.path.exists(image_path):
-        print(f"Error: Image file {image_path} not found.")
-        return None
-    
-    image = cv2.imread(image_path, cv2.IMREAD_COLOR)
-    if image is None:
-        print(f"Error: Image at {image_path} could not be loaded.")
-        return None
-    print("Image loaded successfully")
-    
-    # Convert to grayscale
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    
-    # Apply Gaussian blur
-    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-    
-    # Apply thresholding (binary inversion using Otsu's method)
-    _, thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    print("Step 1 Completed: Image processed")
-    return thresh
-# Function to perform OCR using EasyOCR
-def EasyOCR(path: str) -> list:
-    print("Step 2: Running EasyOCR")
-    reader = es.Reader(['en'])
-    text = reader.readtext(path)
-    print("Step 2 Completed: EasyOCR finished")
-    return text
-
-def TesseractOCR(image_path):
-    print("Step 3: Running TesseractOCR")
-    text = pytesseract.image_to_string(image_path, lang='eng')
-    print("Step 3 Completed: TesseractOCR finished")
-    return text.split('\n')
-
-def combined_ocr(path):
-    print("Step 4: Combining OCR results")
-    easy_results = EasyOCR(path)
-    tesseract_results = TesseractOCR(path)
-    
-    # Combine and deduplicate results
-    combined_results = set(detection[1] for detection in easy_results) | set(tesseract_results)
-    combined_results_list = list(combined_results)
-    print(f"Combined OCR Results (size: {len(combined_results_list)}): {combined_results_list[:10]}...")
-    print("Step 4 Completed: OCR results combined")
-    return combined_results_list
+    except Exception as e:
+        print(f"Error querying OCR.space API: {e}")
+        return []
 
 def postprocess_text(detected_text):
-    print("Step 5: Post-processing text")
+    """
+    Filter and clean the detected text using SpellChecker.
+    """
     if not detected_text:
-        print("No text detected, skipping post-processing.")
         return []
     
     filtered_text = [word for word in detected_text if re.match(r'^[A-Za-z]+$', word)]
-    if len(filtered_text) == 0:
-        print("No valid words to process")
-        return []
-    
     spell = SpellChecker()
-    cleaned_text = []
-    
-    for text in filtered_text:
-        corrected = spell.correction(text)
-        cleaned_text.append(corrected)
-    
-    print(f"Step 5 Completed: Text post-processed (processed {len(cleaned_text)} words)")
+    cleaned_text = [spell.correction(word) for word in filtered_text]
     return cleaned_text
 
 def search_recipes_by_ingredients(ingredients):
-    global nlp
-    if nlp is None:
-        nlp = spacy.load("en_core_web_md")
+    """
+    Search for recipes using Spoonacular API.
+    """
     try:
         params = {
             "ingredients": ",".join(ingredients),
@@ -127,6 +86,9 @@ def search_recipes_by_ingredients(ingredients):
         return []
 
 def foodSearch(food):
+    """
+    Search for food using Fatsecret API.
+    """
     try:
         foods = fs.foods_search(food)
         if foods:
@@ -135,7 +97,10 @@ def foodSearch(food):
         print(f"Error with Fatsecret API: {e}")
     return None
 
-def is_semantically_similar(word1, word2, threshold=0.8):
+def is_semantically_similar(word1, word2, threshold=0.6):
+    """
+    Check if two words are semantically similar using SpaCy.
+    """
     try:
         token1 = nlp(word1.lower())
         token2 = nlp(word2.lower())
@@ -145,19 +110,20 @@ def is_semantically_similar(word1, word2, threshold=0.8):
         return False
 
 def process_receipt(path):
+    """
+    Process the receipt image using OCR.space API and perform post-processing.
+    """
     print("Step 6: Processing receipt")
-    # Invert the image before OCR
-    inverted_image_path = path.replace('uploads', 'uploads/processed')
-    os.makedirs(os.path.dirname(inverted_image_path), exist_ok=True)
-    invert_image(path, inverted_image_path)
-
-    detected_text = combined_ocr(inverted_image_path)
+    detected_text = ocr_space_api(path)
     processed_text = postprocess_text(detected_text)
     print("Step 6 Completed: Receipt processed")
     return processed_text
 
 @app.route('/upload', methods=['PUT'])
 def upload_file():
+    """
+    Handle file upload and process it to detect foods and find recipes.
+    """
     try:
         if 'file' not in request.files:
             return jsonify({"error": "No file part in the request"}), 400
@@ -182,8 +148,8 @@ def upload_file():
         print(f"Detected foods: {detected_foods}")
 
         recipes = search_recipes_by_ingredients(detected_foods)
-        formatted_recipes = [{"title": recipe.get("title")} for recipe in recipes]
-
+        formatted_recipes = [{"title": recipe.get("title"), "image": recipe.get("image")} for recipe in recipes]
+        print(formatted_recipes)
         return jsonify({
             "message": "File uploaded and processed successfully!",
             "detected_foods": detected_foods,
