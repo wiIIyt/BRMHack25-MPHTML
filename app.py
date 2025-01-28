@@ -3,13 +3,12 @@ import numpy as np
 from flask import Flask, request, jsonify
 from views import views
 import os
-import easyocr as es
 from fatsecret import Fatsecret
 import spacy
 import requests
-import pytesseract
 from spellchecker import SpellChecker
 import re
+import shelf_life as sl
 
 # Lazy-load SpaCy model for similarity comparison
 nlp = spacy.load("en_core_web_md")
@@ -29,9 +28,6 @@ app = Flask(__name__)
 app.register_blueprint(views, url_prefix="/views")
 
 def ocr_space_api(file_path):
-    """
-    Use OCR.space API to extract text from an image.
-    """
     try:
         with open(file_path, 'rb') as file:
             payload = {
@@ -57,9 +53,6 @@ def ocr_space_api(file_path):
         return []
 
 def postprocess_text(detected_text):
-    """
-    Filter and clean the detected text using SpellChecker.
-    """
     if not detected_text:
         return []
     
@@ -69,9 +62,6 @@ def postprocess_text(detected_text):
     return cleaned_text
 
 def search_recipes_by_ingredients(ingredients):
-    """
-    Search for recipes using Spoonacular API.
-    """
     try:
         params = {
             "ingredients": ",".join(ingredients),
@@ -86,21 +76,15 @@ def search_recipes_by_ingredients(ingredients):
         return []
 
 def foodSearch(food):
-    """
-    Search for food using Fatsecret API.
-    """
     try:
         foods = fs.foods_search(food)
         if foods:
             return foods[0]["food_name"]
     except Exception as e:
-        print(f"Error with Fatsecret API: {e}")
+        a=''
     return None
 
-def is_semantically_similar(word1, word2, threshold=0.6):
-    """
-    Check if two words are semantically similar using SpaCy.
-    """
+def is_semantically_similar(word1, word2, threshold=0.3):
     try:
         token1 = nlp(word1.lower())
         token2 = nlp(word2.lower())
@@ -110,20 +94,12 @@ def is_semantically_similar(word1, word2, threshold=0.6):
         return False
 
 def process_receipt(path):
-    """
-    Process the receipt image using OCR.space API and perform post-processing.
-    """
-    print("Step 6: Processing receipt")
     detected_text = ocr_space_api(path)
     processed_text = postprocess_text(detected_text)
-    print("Step 6 Completed: Receipt processed")
     return processed_text
 
 @app.route('/upload', methods=['PUT'])
 def upload_file():
-    """
-    Handle file upload and process it to detect foods and find recipes.
-    """
     try:
         if 'file' not in request.files:
             return jsonify({"error": "No file part in the request"}), 400
@@ -138,14 +114,19 @@ def upload_file():
         # Process the image and perform OCR
         ocr_result = process_receipt(file_path)
         detected_foods = []
+        shelf_life = []
 
         for text in ocr_result:
             food_name = foodSearch(text)
             if food_name and is_semantically_similar(text, food_name):
                 detected_foods.append(food_name)
+        
+        for i in detected_foods:
+            shelf_life.append(sl.print_shelf_life(i))
 
         detected_foods = list(set(detected_foods))
         print(f"Detected foods: {detected_foods}")
+        print(shelf_life)
 
         recipes = search_recipes_by_ingredients(detected_foods)
         formatted_recipes = [{"title": recipe.get("title"), "image": recipe.get("image")} for recipe in recipes]
@@ -153,7 +134,8 @@ def upload_file():
         return jsonify({
             "message": "File uploaded and processed successfully!",
             "detected_foods": detected_foods,
-            "recipes": formatted_recipes
+            "recipes": formatted_recipes,
+            "shelf_life": shelf_life
         })
 
     except Exception as e:

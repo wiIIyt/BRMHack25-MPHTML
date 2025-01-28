@@ -13,7 +13,6 @@
         <div class="top-bar">
             <h1>Product Scanner</h1>
             <div class="buttons">
-                <!-- Buttons under the header -->
                 <button class="about-btn" onclick="toggleVisibility('about')">About</button>
                 <button class="instructions-btn" onclick="toggleVisibility('instrct')">Instructions</button>
             </div>
@@ -36,7 +35,7 @@
                 <h1 id="instrctH1" class="actual-h1">Instructions:</h1>
                 <p id = "instrct" class="actual-p" style="display: block;">
                     To scan the receipt, upload a jpeg/picture of your receipt from your folder,
-                    then press submit. We prefer if you use white text on a black background<strong>&darr;</strong>
+                    then press submit. <strong>&darr;</strong>
                 </p>
             </div>
         </div>
@@ -46,10 +45,13 @@
             <p>Submit your receipt image here:</p>
             <input id="fileInput" class="scan" type="file">
             <button type="button" onclick="uploadFile()" class="scan">Submit</button>
+
             <!-- Dynamic results section -->
             <div id="results">
-                <h3>Suggested Recipes:</h3>
+                <h3>Detected Items and Shelf Life:</h3>
                 <div id="loading"></div>
+                <ul id="detectedItemsList" class="results-list"></ul>
+                <h3>Suggested Recipes:</h3>
                 <ul id="recipeList" class="results-list"></ul>
             </div>
         </div>
@@ -61,7 +63,6 @@
         function toggleVisibility(section) {
             const element = document.getElementById(section);
             if (element) {
-                // Toggle the display of the specified section
                 if (element.style.display === "none" || element.style.display === "") {
                     element.style.display = "block";
                 } else {
@@ -97,11 +98,20 @@
             })
             .then(response => response.json())
             .then(data => {
-                console.log("Server Response:", data);  // Debugging line
+                console.log("Server Response:", data);
                 if (data.error) {
                     alert(`Error: ${data.error}`);
                 } else {
-                    // Update recipes section
+                    // Display detected items with shelf life
+                    const detectedItemsList = document.getElementById('detectedItemsList');
+                    detectedItemsList.innerHTML = "";
+                    data.detected_foods.forEach((item, index) => {
+                        const li = document.createElement('li');
+                        li.textContent = `${item} - ${data.shelf_life[index]}`;
+                        detectedItemsList.appendChild(li);
+                    });
+
+                    // Display recipes
                     const recipeList = document.getElementById('recipeList');
                     recipeList.innerHTML = "";
                     if (data.recipes) {
@@ -110,10 +120,11 @@
                             li.textContent = recipe.title;
                             recipeList.appendChild(li);
                         });
-                        document.getElementById('loading').removeChild(loadingImg);
                     } else {
                         recipeList.innerHTML = "<li>No recipes found.</li>";
                     }
+
+                    document.getElementById('loading').removeChild(loadingImg);
                 }
             })
             .catch(error => {
